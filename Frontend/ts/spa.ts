@@ -1,5 +1,7 @@
 console.log("Script spa.ts chargé !");
 
+import {get_user, connectWebSocket} from "./utils"
+
 if (window.location.pathname === "/") {
     window.history.replaceState({ page: "index" }, "Index", "/index");
 }
@@ -28,8 +30,10 @@ async function navigateTo(page: string, addHistory: boolean = true): Promise<voi
     const loging: boolean = page == "login";
     const creating: boolean = page == "create_account";
     const loged: boolean = creating || loging;
-    if (username.length > 0)
+    if (username.length > 0) {
         afficheUser = true;
+        connectWebSocket();
+    }
     if (!loged && !afficheUser) {
         console.log("passe dans recur");
         navigateTo("login");
@@ -76,22 +80,6 @@ async function navigateTo(page: string, addHistory: boolean = true): Promise<voi
 
     } catch (error) {
         console.error('❌ Erreur de chargement de la page:', error);
-    }
-}
-
-async function get_user(): Promise<string> {
-    try {
-        const response = await fetch("/get_user", {
-            method: "GET",
-            credentials: "include",
-        })
-        if (!response.ok)
-            return "";
-        const data: {success: boolean; username?: string} = await response.json();
-        return data.success ? data.username ?? "" : ""; 
-    } catch (error) {
-        alert("Erreur cant get user");
-        return "";
     }
 }
 

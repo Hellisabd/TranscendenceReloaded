@@ -1,23 +1,23 @@
 console.log("game.js chargé");
 
-let waiting_room: string[] = [];
+import {get_user} from "./utils.js";
 
-async function get_user(): Promise<string> {
-    try {
-        const response = await fetch("/get_user", {
-            method: "GET",
-            credentials: "include",
-        });
-        if (!response.ok) {
-            return "";
-        }
-        const data: { success: boolean; username?: string } = await response.json();
-        return data.success ? data.username ?? "" : "";
-    } catch (error) {
-        alert("Erreur: Impossible de récupérer l'utilisateur");
-        return "";
-    }
-}
+// async function get_user(): Promise<string> {
+//     try {
+//         const response = await fetch("/get_user", {
+//             method: "GET",
+//             credentials: "include",
+//         });
+//         if (!response.ok) {
+//             return "";
+//         }
+//         const data: { success: boolean; username?: string } = await response.json();
+//         return data.success ? data.username ?? "" : "";
+//     } catch (error) {
+//         alert("Erreur: Impossible de récupérer l'utilisateur");
+//         return "";
+//     }
+// }
 
 async function play_pong() {
     const user = await get_user();
@@ -28,13 +28,13 @@ async function play_pong() {
     });
     const data = await response.json();
     console.log(`data.success:  ${data.success}, data.username1: ${data.username1}, data.username2: ${data.username2}`);
-    if (data.success && data.username1 && data.username2) {
-        console.log("✅ Match prêt, démarrage du jeu !");
-        initializeGame(data.username1, data.username2);
-    }
-    else if (!data.success)
+    // if (data.success && data.username1 && data.username2) {
+    //     console.log("✅ Match prêt, démarrage du jeu !");
+    //     initializeGame(data.username1, data.username2);
+    // }
+    if (!data.success)
         alert("Can't do that");
-    console.log("lance pas le jeu");
+    // console.log("lance pas le jeu");
 }
 
 function initializeGame(user1: string, user2: string): void {
@@ -46,16 +46,12 @@ function initializeGame(user1: string, user2: string): void {
         if (!ctx) {
             return ;
         }
-        const sock_name = window.location.host
-        const socket = new WebSocket("wss://" + sock_name + "/ws/pong");
-        socket.onopen = () => {
-            console.log("✅ WebSocket connectée !");
-            socket.send(JSON.stringify({ username1: user1, username2: user2}));
-        };
-        socket.onerror = (event) => {
-            console.error("❌ WebSocket erreur :", event);};
-        socket.onclose = (event) => {
-            console.warn("⚠️ WebSocket fermée :", event);};
+        // const sock_name = window.location.host
+        // const socket = new WebSocket("wss://" + sock_name + "/ws/pong");
+        // socket.onopen = () => {
+        //     console.log("✅ WebSocket connectée !");
+        //     socket.send(JSON.stringify({ username1: user1, username2: user2}));
+        // };
         
         const paddleWidth = 20;
         const paddleHeight = 100;
@@ -70,15 +66,16 @@ function initializeGame(user1: string, user2: string): void {
             score: { player1: 0, player2: 0 },
             game: { state: 0 }
         };
-
-        socket.onmessage = (event) => {
-            let gs = JSON.parse(event.data);
-            gameState = gs.gameState;
-            drawGame();
-        };
+        if (socket) {
+            socket.onmessage = (event) => {
+                let gs = JSON.parse(event.data);
+                gameState = gs.gameState;
+                drawGame();
+            };
+        }
 
         document.addEventListener("keydown", (event) => {
-            if (socket.readyState === WebSocket.OPEN) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
                 let message: { player?: string; move?: string; game?: string } | null = null;
         
                 if (event.key === "ArrowUp")
@@ -101,7 +98,7 @@ function initializeGame(user1: string, user2: string): void {
         });
 
         document.addEventListener("keyup", (event) => {
-            if (socket.readyState === WebSocket.OPEN) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
                 let message: { player?: string; move?: string; game?: string } | null = null;
 
                 if (event.key === "ArrowUp" || event.key === "ArrowDown") {
