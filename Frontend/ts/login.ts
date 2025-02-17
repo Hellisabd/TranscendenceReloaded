@@ -1,3 +1,7 @@
+import {get_user} from "./game.js"
+import {navigateTo} from "./spa.js"
+
+
 console.log("login.ts chargé");
 
 type LoginResponse = {
@@ -9,8 +13,6 @@ type ModifyUserResponse = {
     success: boolean;
 };
 
-declare function navigateTo(page: string): void;
-declare function get_user(): Promise<string | null>;
 
 async function login(event: Event): Promise<void> {
     event.preventDefault();

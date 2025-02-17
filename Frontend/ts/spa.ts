@@ -1,6 +1,9 @@
+import {get_user, connectWebSocket} from "./game.js"
+
+(window as any).navigateTo = navigateTo;
+
 console.log("Script spa.ts chargé !");
 
-import {get_user, connectWebSocket} from "./utils"
 
 if (window.location.pathname === "/") {
     window.history.replaceState({ page: "index" }, "Index", "/index");
@@ -21,18 +24,16 @@ async function set_user(): Promise<void> {
     }
 }
 
-
-async function navigateTo(page: string, addHistory: boolean = true): Promise<void> {
+export async function navigateTo(page: string, addHistory: boolean = true): Promise<void> {
     console.log("Navigating to:", page);
     let afficheUser = false;
-    const username: string = await get_user(); 
+    const username: string | null = await get_user(); 
     console.log(`✅ Utilisateur récupéré : ${username}`);
     const loging: boolean = page == "login";
     const creating: boolean = page == "create_account";
     const loged: boolean = creating || loging;
-    if (username.length > 0) {
+    if (username) {
         afficheUser = true;
-        connectWebSocket();
     }
     if (!loged && !afficheUser) {
         console.log("passe dans recur");
@@ -77,6 +78,8 @@ async function navigateTo(page: string, addHistory: boolean = true): Promise<voi
         if (addHistory) {
             window.history.pushState({ page: page }, "", `/${page}`);
         }
+        if (page === "pong_game")
+            connectWebSocket();
 
     } catch (error) {
         console.error('❌ Erreur de chargement de la page:', error);
