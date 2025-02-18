@@ -17,7 +17,7 @@ export async function connectWebSocket() {
         return ;
     }
     const sock_name = window.location.host;
-    socket = new WebSocket("wss://" + sock_name + "ws/pong");
+    socket = new WebSocket("wss://" + sock_name + "/ws/pong");
     socket.onopen = () => {
         console.log("✅ WebSocket connectée !");
     }

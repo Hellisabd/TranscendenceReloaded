@@ -67,6 +67,8 @@ export async function navigateTo(page: string, addHistory: boolean = true): Prom
         const newContent: HTMLDivElement | null = tempDiv.querySelector("#content");
         if (newContent) {
             contentDiv.innerHTML = newContent.innerHTML;
+            if (page === "pong_game")
+                connectWebSocket();
         } else {
             console.error("Erreur : Aucun élément #content trouvé dans la page chargée.");
         }
@@ -78,8 +80,6 @@ export async function navigateTo(page: string, addHistory: boolean = true): Prom
         if (addHistory) {
             window.history.pushState({ page: page }, "", `/${page}`);
         }
-        if (page === "pong_game")
-            connectWebSocket();
 
     } catch (error) {
         console.error('❌ Erreur de chargement de la page:', error);
