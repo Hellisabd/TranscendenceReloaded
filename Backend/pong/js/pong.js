@@ -116,7 +116,6 @@ fastify.post("/waiting_room", async (req, reply) => {
         } else {
             const username1 = waiting_room.shift();
             const username2 = waiting_room.shift();
-            console.log(`username1::::: ${username1} username2 :::::: ${username2}`);
             if (waitingClients[username1]) {
                 waitingClients[username1].send(JSON.stringify({
                     action: "start_game",

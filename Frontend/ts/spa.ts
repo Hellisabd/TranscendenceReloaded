@@ -1,4 +1,7 @@
 import {get_user, connectWebSocket} from "./game.js"
+// import {login} from "./login.js"
+
+
 
 (window as any).navigateTo = navigateTo;
 
@@ -13,7 +16,6 @@ async function set_user(): Promise<void> {
     const userDiv = document.getElementById("user") as HTMLDivElement;
     
     const username =  await get_user();
-    console.log(`✅ Utilisateur récupéré : ${username}`);
     
     if (username) {
         userDiv.innerHTML = `👤 ${username}`;
@@ -28,7 +30,6 @@ export async function navigateTo(page: string, addHistory: boolean = true): Prom
     console.log("Navigating to:", page);
     let afficheUser = false;
     const username: string | null = await get_user(); 
-    console.log(`✅ Utilisateur récupéré : ${username}`);
     const loging: boolean = page == "login";
     const creating: boolean = page == "create_account";
     const loged: boolean = creating || loging;

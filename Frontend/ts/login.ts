@@ -1,9 +1,9 @@
 import {get_user} from "./game.js"
 import {navigateTo} from "./spa.js"
 
-(window as any).login = login;
 (window as any).create_account = create_account;
 (window as any).modify_user = modify_user;
+(window as any).login = login;
 
 
 console.log("login.ts chargé");

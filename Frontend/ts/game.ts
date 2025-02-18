@@ -4,8 +4,11 @@ let waiting_room: string[] = [];
 let socket: WebSocket | null = null;
 let isWebSocketConnected = false;
 
+(window as any).play_pong = play_pong;
+
 
 export async function connectWebSocket() {
+    console.log("passing in connect web socket");
     if (isWebSocketConnected) {
         console.log("Websocket already connected");
         return ;
@@ -20,6 +23,7 @@ export async function connectWebSocket() {
     socket = new WebSocket("wss://" + sock_name + "/ws/pong");
     socket.onopen = () => {
         console.log("✅ WebSocket connectée !");
+        socket?.send("lol");
     }
     socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
@@ -51,7 +55,7 @@ export async function get_user(): Promise<string> {
     }
 }
 
-async function play_pong() {
+export async function play_pong() {
     const user = await get_user();
     const response = await fetch("/waiting_room", {
         method: "POST",

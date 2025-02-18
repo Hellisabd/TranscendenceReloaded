@@ -34,14 +34,12 @@ const dbFile = process.env.DB_FILE || "/usr/src/app/dataBase/core.db";
 // 📌 Vérifier et créer le dossier dataBase s'il n'existe pas
 const dbDir = path.dirname(dbFile);
 if (!fs.existsSync(dbDir)) {
-  console.log("📌 Création du dossier dataBase...");
   fs.mkdirSync(dbDir, { recursive: true });
 }
 
 
 // 📌 Initialiser la base SQLite
 const db = new Database(dbFile);
-console.log(`📌 Base de données utilisée : ${dbFile}`);
 
 // 🔹 Création de la table "users" si elle n'existe pas
 db.prepare(`
@@ -55,7 +53,6 @@ db.prepare(`
 
 // 🔍 Vérifier les tables existantes
 const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table';").all();
-console.log("📌 Tables trouvées dans SQLite:", tables);
 
 // 🚀 Lancement du serveur
 fastify.listen({ port: 5000, host: "0.0.0.0" }, (err, address) => {
@@ -74,7 +71,6 @@ fastify.post("/login", async (request, reply) => {
   }
   try {
     const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-    console.log(user);
     if (!user)
         return reply.send({ success: false, error: "Connexion Echouée : invalid email" });
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -89,10 +85,6 @@ fastify.post("/login", async (request, reply) => {
 
 fastify.post("/modify_user", async (request, reply) => {
   const { email, password, newusername, username } = request.body;
-  console.log(`newusername: ${newusername}`);
-  console.log(`password: ${password}`);
-  console.log(`email: ${email}`);
-  console.log(`oldusername: ${username}`);
   if (!email || !password || !newusername || !username) {
     return reply.code(400).send({ success: false, error: "Champs manquants" });
   }
@@ -100,7 +92,6 @@ fastify.post("/modify_user", async (request, reply) => {
     const newpassword = await bcrypt.hash(password, SALT_ROUNDS); 
     const stmt = db.prepare("UPDATE users SET username = ?, email = ?, password = ? WHERE username = ?");
     const result = stmt.run(newusername, email, newpassword, username);
-    console.log("ici");
     if (result.changes > 0) {
       return reply.send({succes: true});
     } else {
@@ -133,26 +124,18 @@ fastify.post('/logout', async (request, reply) => {
 
 // 🔹 Route POST pour créer un compte
 fastify.post("/create_account", async (request, reply) => {
-  console.log(`request : ${request.body}`);
   const { username, email, password } = request.body;
-  console.log(`password : ${password}`);
-  console.log(`email : ${email}`);
   if (!username || !email || !password) {
-    console.log("manquant");
     return reply.code(400).send({ success: false, error: "Champs manquants" });
   }
 
-  console.log("📩 Requête reçue - Nom:", username, "Email:", email, "Password:", password);
-
   try {
     // 🔍 Vérifier si l'utilisateur existe déjà
-    console.log(`🔍 Recherche de l'utilisateur avec l'email : '${email}'`);
     const existingemail = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
     if (existingemail) {
       return reply.code(409).send({ success: false });
     }
     const existingUser = db.prepare("SELECT * FROM users WHERE email = ?").get(username);
-    console.log("🔍 Résultat de la requête SELECT :", existingUser);
     if (existingUser) {
       return reply.code(409).send({ success: false });
     }

@@ -15,7 +15,6 @@ function setupWebSocket(fastify, gameState, update, check_score, new_game) {
         connection.socket.on("message", (message) => {
             const data = JSON.parse(message.toString());
             if (data.username1 && data.username2) {
-                console.log(`user1: ${data.username1}\n user2: ${data.username2}`);
                 gameState.paddles.player1.name = data.username1;
                 gameState.paddles.player2.name = data.username2;
             }

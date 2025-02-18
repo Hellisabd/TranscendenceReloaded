@@ -14,7 +14,6 @@ fastify.register(fastifyCookie, {
 
 async function log(req, reply) {
     try {
-        console.log("🔄 Redirection de /login vers users...");
         
         const response = await axios.post("http://users:5000/login", req.body);
         const result = await response.data;
@@ -44,7 +43,6 @@ async function log(req, reply) {
 
 async function create_account(req, reply) {
     try {
-        console.log("🔄 Redirection de /create_account vers users...");
         
         const response = await axios.post("http://users:5000/create_account", req.body, {
             withCredentials: true
