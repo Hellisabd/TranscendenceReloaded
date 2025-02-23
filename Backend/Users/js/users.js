@@ -67,6 +67,60 @@ db.prepare(`
   )
 `).run();
 
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS match_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player1_username TEXT NOT NULL,
+    player2_username TEXT NOT NULL,
+    winner_username TEXT NOT NULL,
+    looser_username TEXT NOT NULL,
+    player1_score INTEGER NOT NULL DEFAULT 0,
+    player2_score INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  )
+`).run();
+
+db.prepare(`
+  CREATE TABLE IF NOT EXISTS tournament_history (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    player1_username TEXT NOT NULL,
+    player1_score INTEGER NOT NULL DEFAULT 0,
+    player1_ranking INTEGER NOT NULL DEFAULT 0,
+
+    player2_username TEXT NOT NULL,
+    player2_score INTEGER NOT NULL DEFAULT 0,
+    player2_ranking INTEGER NOT NULL DEFAULT 0,
+
+    player3_username TEXT NOT NULL,
+    player3_score INTEGER NOT NULL DEFAULT 0,
+    player3_ranking INTEGER NOT NULL DEFAULT 0,
+
+    player4_username TEXT NOT NULL,
+    player4_score INTEGER NOT NULL DEFAULT 0,
+    player4_ranking INTEGER NOT NULL DEFAULT 0,
+    
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    `).run();
+    
+    fastify.post("/update_history_tournament", async (request, reply) => {
+      const {classement} = request.body;
+      db.prepare(`INSERT INTO tournament_history 
+                (player1_username, player1_score, player1_ranking,
+                player2_username, player2_score, player2_ranking,
+                player3_username, player3_score, player3_ranking,
+                player4_username, player4_score, player4_ranking)
+                VALUES (?, ?, ?,
+                 ?, ?, ?,
+                 ?, ?, ?,
+                 ?, ?, ?)`)
+                 .run(classement[0].username, classement[0].score, 1, 
+                      classement[1].username, classement[1].score, 2,
+                      classement[2].username, classement[2].score, 3,
+                      classement[3].username, classement[3].score, 4,
+                 );
+    });
+
 // 🔍 Vérifier les tables existantes
 const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table';").all();
 console.log("📌 Tables trouvées dans SQLite:", tables);
@@ -100,6 +154,7 @@ fastify.post("/login", async (request, reply) => {
   }
 });
 
+
 fastify.post("/modify_user", async (request, reply) => {
   const { email, password, newusername, username } = request.body;
   if (!email || !password || !newusername || !username) {
@@ -125,7 +180,7 @@ fastify.get("/me", async (request, reply) => {
     if (!token) {
       return reply.code(402).send({success: false, error: "Non autorise"});
     }
-
+    
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return reply.send({ success: true, user : decoded});
   } catch {
@@ -135,28 +190,41 @@ fastify.get("/me", async (request, reply) => {
 
 fastify.post('/logout', async (request, reply) => {
   reply
-    .clearCookie('session', { path: '/' })
-    .send({ success: true, message: 'Déconnecté' });
+  .clearCookie('session', { path: '/' })
+  .send({ success: true, message: 'Déconnecté' });
 });
 
 fastify.post("/get_history", async (request, reply) => {
-    const {username} = request.body;
-    const history = await db.prepare(`
-      SELECT * FROM match_history
+  const {username} = request.body;
+  const history = await db.prepare(`
+    SELECT * FROM match_history
+    WHERE player1_username = ?
+    OR player2_username = ?
+    ORDER BY created_at DESC;
+    `).all(username, username);
+
+    const history_tournament = await db.prepare(`
+      SELECT * FROM tournament_history
       WHERE player1_username = ?
       OR player2_username = ?
+      OR player3_username = ?
+      OR player4_username = ?
       ORDER BY created_at DESC;
-    `).all(username, username);
-    reply.send(JSON.stringify({history: history}));
-});
+      `).all(username, username, username, username);
 
-async function history_for_tournament(history) {
-  for (const match of history) { 
-    const player1 = match.myusername;
-    const player2 = match.otherusername;
-    const score_player1 = match.myscore;
+    console.log("history_tournament: ", history_tournament);
+    reply.send(JSON.stringify({history: history, history_tournament: history_tournament}));
+  });
+  
+
+
+  async function history_for_tournament(history) {
+    for (const match of history) { 
+      const player1 = match.myusername;
+      const player2 = match.otherusername;
+      const score_player1 = match.myscore;
     const score_player2 = match.otherscore;
-
+    
     if (score_player1 !== 1 && score_player2 !== 1) {
       return;
     }

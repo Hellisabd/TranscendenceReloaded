@@ -170,18 +170,15 @@ fastify.register(async function (fastify) {
                         currentTournament.count_game++;
                         currentTournament.end_lobby = 0; 
                     } 
-                    // else if (currentTournament.end_lobby == 4 && currentTournament.count_game == 2) {
-                    //     console.log("game 3");
-                    //     currentTournament.history[data.username] = data.history;
-                    //     launchTournament(currentTournament.tournamentsUsernames[0], currentTournament.tournamentsUsernames[3], currentTournament.tournamentsUsernames[1], currentTournament.tournamentsUsernames[2], id_tournament_key_from_player)
-                    //     currentTournament.end_lobby = 0;
-                    //     currentTournament.count_game++; 
-                    // }
-                    else if (currentTournament.count_game == 2 && currentTournament.end_lobby == 4) {
+                    else if (currentTournament.end_lobby == 4 && currentTournament.count_game == 2) {
+                        console.log("game 3");
+                        launchTournament(currentTournament.tournamentsUsernames[0], currentTournament.tournamentsUsernames[3], currentTournament.tournamentsUsernames[1], currentTournament.tournamentsUsernames[2], id_tournament_key_from_player)
+                        currentTournament.end_lobby = 0;
+                        currentTournament.count_game++; 
+                    }
+                    else if (currentTournament.count_game == 3 && currentTournament.end_lobby == 4) {
                         currentTournament.classements.sort((a, b) => b.score - a.score);
                         console.log("end tournament");
-                        currentTournament.count_game = 0; 
-                        currentTournament.end_lobby = 0;
                         for (let i = 0; i < 4; i++) {
                             console.log("sending trucs par clients pour la fin du tournoi");
                             currentTournament.tournamentQueue[currentTournament.tournamentsUsernames[i]].socket.send(JSON.stringify({end_tournament : true, classementDecroissant: currentTournament.classements}));
@@ -198,6 +195,17 @@ fastify.register(async function (fastify) {
                                 }
                             );
                         }
+                        axios.post("http://users:5000/update_history_tournament",
+                            {
+                                classement: currentTournament.classements,
+                                tournament: true
+                            },
+                            {
+                                headers: {
+                                    "Content-Type": "application/json"
+                                }
+                            }
+                        );
                         if (currentTournament) {
                             let socketClose = Object.values(currentTournament.tournamentQueue);
 

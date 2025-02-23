@@ -102,9 +102,10 @@ async function get_history(req, reply) {
     );
     const historyTemplate = fs.readFileSync("Frontend/templates/history.ejs", "utf8");
     console.log("Réponse reçue :", response.data);
-    const finalFile = ejs.render(historyTemplate, {history: response.data.history}); 
+    const finalFile = ejs.render(historyTemplate, {history: response.data.history, tournament: response.data.history_tournament}); 
     console.log(finalFile);
-    reply.send(finalFile);
+    // reply.send(finalFile);
+    return reply.view("history.ejs", { history: response.data.history, tournament: response.data.history_tournament });
 }
 
 async function end_tournament(req, reply) {

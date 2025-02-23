@@ -15,8 +15,8 @@
   </script>
   <div id="user" style="display: none;"></div>
   
-  <h1>Historique des matchs</h1>
   <div id="content">
+	<h1>Historique des matchs</h1>
   <% if (history.length === 0) { %>
 	<p>Aucun match trouvé.</p>
 	<% } else { %>
@@ -39,6 +39,46 @@
 				</tr>
 			<% }) %>
 		</table>
+	<% } %>
+	<h1>Tournaments</h1>
+	<% if (tournament.length === 0) { %>
+		<p>Aucun tournoi joué.</p>
+	<% } else { %>
+		<h2>Classement des tournois</h2>
+		<% tournament.forEach(tournoi => { %>
+			<table border="1">
+				<tr>
+					<th>Position</th>
+					<th>Joueur</th>
+					<th>Score</th>
+					<th>Date</th>
+				</tr>
+				<tr>
+					<td>🥇 1</td>
+					<td><%= tournoi.player1_username %></td>
+					<td><%= tournoi.player1_score %></td>
+					<td><%= tournoi.created_at %></td>
+				</tr>
+				<tr>
+					<td>🥈 2</td>
+					<td><%= tournoi.player2_username %></td>
+					<td><%= tournoi.player2_score %></td>
+					<td><%= tournoi.created_at %></td>
+				</tr>
+				<tr>
+					<td>🥉 3</td>
+					<td><%= tournoi.player3_username %></td>
+					<td><%= tournoi.player3_score %></td>
+					<td><%= tournoi.created_at %></td>
+				</tr>
+				<tr>
+					<td>🏅 4</td>
+					<td><%= tournoi.player4_username %></td>
+					<td><%= tournoi.player4_score %></td>
+					<td><%= tournoi.created_at %></td>
+				</tr>
+			</table>
+		<% }) %>
 	<% } %>
   <%- include('/usr/src/app/Frontend/templates/scripts.ejs') %>
   </div>

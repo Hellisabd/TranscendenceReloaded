@@ -84,7 +84,7 @@ fastify.get('/:page', async (request, reply) => {
   let page = request.params.page
   if (page[page.length - 1] == '/')
     page = page.substring(0, page.length - 1)
-  if (page == '')
+  if (page == '' || page == "end_tournament")
     page = 'index'
   let filePath = "Frontend/templates/" + page + ".ejs"
   let fileName =  page + ".ejs"
