@@ -88,7 +88,6 @@ fastify.post("/login", async (request, reply) => {
   }
   try {
     const user = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
-    console.log(user);
     if (!user)
         return reply.send({ success: false, error: "Connexion Echouée : invalid email" });
     const passwordMatch = await bcrypt.compare(password, user.password);
@@ -103,10 +102,6 @@ fastify.post("/login", async (request, reply) => {
 
 fastify.post("/modify_user", async (request, reply) => {
   const { email, password, newusername, username } = request.body;
-  console.log(`newusername: ${newusername}`);
-  console.log(`password: ${password}`);
-  console.log(`email: ${email}`);
-  console.log(`oldusername: ${username}`);
   if (!email || !password || !newusername || !username) {
     return reply.code(400).send({ success: false, error: "Champs manquants" });
   }
@@ -114,7 +109,6 @@ fastify.post("/modify_user", async (request, reply) => {
     const newpassword = await bcrypt.hash(password, SALT_ROUNDS); 
     const stmt = db.prepare("UPDATE users SET username = ?, email = ?, password = ? WHERE username = ?");
     const result = stmt.run(newusername, email, newpassword, username);
-    console.log("ici");
     if (result.changes > 0) {
       return reply.send({succes: true});
     } else {
@@ -156,9 +150,54 @@ fastify.post("/get_history", async (request, reply) => {
     reply.send(JSON.stringify({history: history}));
 });
 
+async function history_for_tournament(history) {
+  for (const match of history) { 
+    const player1 = match.myusername;
+    const player2 = match.otherusername;
+    const score_player1 = match.myscore;
+    const score_player2 = match.otherscore;
+
+    if (score_player1 !== 1 && score_player2 !== 1) {
+      return;
+    }
+
+    let winner, looser;
+    if (score_player1 > score_player2) {
+      winner = player1;
+      looser = player2;
+    } else {
+      looser = player1;
+      winner = player2;
+    }
+
+    // Vérification des matchs récents dans les 5 dernières secondes
+    const recentMatch = await db.prepare(`
+      SELECT created_at FROM match_history 
+      WHERE ((player1_username = ? AND player2_username = ?) 
+          OR (player1_username = ? AND player2_username = ?))
+      AND ABS(strftime('%s', 'now') - strftime('%s', created_at)) < 5
+      ORDER BY created_at DESC
+      LIMIT 1
+    `).get(player2, player1, player1, player2);
+
+    if (recentMatch) {
+      console.log("Match déjà enregistré");
+      continue;
+    }
+
+    await db.prepare(`INSERT INTO match_history 
+              (player1_username, player2_username, winner_username, looser_username, player1_score, player2_score)
+              VALUES (?, ?, ?, ?, ?, ?)`)
+              .run(player1, player2, winner, looser, score_player1, score_player2);
+  }
+}
+
 fastify.post("/update_history", async (request, reply) => {
-  const {history} = request.body;
-  console.log("📩 Requête reçue - History:", history);
+  const {history, tournament} = request.body;
+  if (tournament) {
+    history_for_tournament(history);
+    return ;
+  }
   const player1 = history.myusername;
   const player2 = history.otherusername;
   const score_player1 = history.myscore;
@@ -198,26 +237,18 @@ fastify.post("/update_history", async (request, reply) => {
 
 // 🔹 Route POST pour créer un compte
 fastify.post("/create_account", async (request, reply) => {
-  console.log(`request : ${request.body}`);
   const { username, email, password } = request.body;
-  console.log(`password : ${password}`);
-  console.log(`email : ${email}`);
   if (!username || !email || !password) {
-    console.log("manquant");
     return reply.code(400).send({ success: false, error: "Champs manquants" });
   }
 
-  console.log("📩 Requête reçue - Nom:", username, "Email:", email, "Password:", password);
-
   try {
     // 🔍 Vérifier si l'utilisateur existe déjà
-    console.log(`🔍 Recherche de l'utilisateur avec l'email : '${email}'`);
     const existingemail = db.prepare("SELECT * FROM users WHERE email = ?").get(email);
     if (existingemail) {
       return reply.code(409).send({ success: false });
     }
     const existingUser = db.prepare("SELECT * FROM users WHERE email = ?").get(username);
-    console.log("🔍 Résultat de la requête SELECT :", existingUser);
     if (existingUser) {
       return reply.code(409).send({ success: false });
     }

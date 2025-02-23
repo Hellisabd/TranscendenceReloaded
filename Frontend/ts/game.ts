@@ -1,6 +1,13 @@
+
 console.log("game.js chargé");
 
+declare function navigateTo(page: string, addHistory: boolean, classement:  { username: string; score: number }[] | null): void;
+declare function get_user(): Promise<string | null>;
+
+
 let player_id = 0;
+
+let id_tournament: number = 0;
 
 let inTournament:boolean = false;
 
@@ -13,22 +20,22 @@ let Tsocket: WebSocket | null = null;
 let disp: boolean = true;
 let win: number = 0;
 
-async function get_user(): Promise<string> {
-    try {
-        const response = await fetch("/get_user", {
-            method: "GET",
-            credentials: "include",
-        });
-        if (!response.ok) {
-            return "";
-        }
-        const data: { success: boolean; username?: string } = await response.json();
-        return data.success ? data.username ?? "" : "";
-    } catch (error) {
-        alert("Erreur: Impossible de récupérer l'utilisateur");
-        return "";
-    }
-}
+// async function get_user(): Promise<string> {
+//     try {
+//         const response = await fetch("/get_user", {
+//             method: "GET",
+//             credentials: "include",
+//         });
+//         if (!response.ok) {
+//             return "";
+//         }
+//         const data: { success: boolean; username?: string } = await response.json();
+//         return data.success ? data.username ?? "" : "";
+//     } catch (error) {
+//         alert("Erreur: Impossible de récupérer l'utilisateur");
+//         return "";
+//     }
+// }
 
 async function play_pong() {
     Disconnect_from_game();
@@ -72,14 +79,17 @@ async function pong_tournament() {
         console.warn("⚠️ WebSocket tournament fermée :", user);};
     Tsocket.onmessage = (event) => {
         let data = JSON.parse(event.data);
+        console.log("id_tournament in data: ", data.id_tournament);
+        console.log("data: ", data);
+        if (data.id_tournament != undefined) {
+            console.log("actualise id_tournament");
+            id_tournament = data.id_tournament; 
+        }
         if (data.end_tournament && data.classementDecroissant) {
             Tsocket?.close();
-            fetch("/end_tournament", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ classement: data.classementDecroissant})
-            });
+            navigateTo("end_tournament", true, data.classementDecroissant);
             inTournament = false;
+            return ;
         }
         console.log("success: ", data.success);
         if (data.success == true) {
@@ -92,12 +102,12 @@ async function pong_tournament() {
 }
 
 function end_game(win: number, user: string | null, otheruser: string, myscore: number, otherscore: number,  intournament: boolean) {
-    if (intournament) {
-        console.log("endgame");
-        Tsocket?.send(JSON.stringify({ username: user, endgame: true, history: {"win": win, myusername: user, "otherusername": otheruser,  "myscore": myscore, "otherscore": otherscore}}));
+    if (intournament && (myscore == 1 || otherscore == 1)) { // a changer en 3 c est le score finish
+        console.log("endgame on tournament: ", id_tournament);
+        Tsocket?.send(JSON.stringify({ id_tournament_key_from_player: id_tournament, username: user, endgame: true, history: {"win": win, myusername: user, "otherusername": otheruser,  "myscore": myscore, "otherscore": otherscore}}));
         socket?.close();
     }
-    else {
+    else if (myscore == 1 || otherscore == 1) { // a changer en 3 c est le score finish
         console.log("update normal game history"); 
         fetch("/update_history", {
             method: "POST",
@@ -109,13 +119,17 @@ function end_game(win: number, user: string | null, otheruser: string, myscore: 
 }
 
 function Disconnect_from_game() {
+    console.log("on deco");
     if (!Wsocket && !socket && !lobbyKey && !Tsocket)
         return;
     console.log("deco");
     Wsocket?.close();
     socket?.close();
+    Tsocket?.send(JSON.stringify({ id_tournament_key_from_player: id_tournament, disconnect: true}));
+    Tsocket?.close();
     socket = null;
     lobbyKey = null;
+    id_tournament = 0;
     disp = true;
     win = 0;
 }
@@ -292,3 +306,9 @@ function initializeGame(user1: string, user2: string, myuser: string | null): vo
         console.error("Erreur : Le canvas n'a pas été trouvé.");
     }
 }
+
+window.addEventListener("beforeunload", () => {
+    if (Tsocket?.readyState === WebSocket.OPEN) {
+        Tsocket?.send(JSON.stringify({ id_tournament_key_from_player: id_tournament, disconnect: true}));
+    }
+});

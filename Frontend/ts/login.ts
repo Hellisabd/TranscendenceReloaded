@@ -9,7 +9,7 @@ type ModifyUserResponse = {
     success: boolean;
 };
 
-declare function navigateTo(page: string): void;
+declare function navigateTo(page: string, addHistory: boolean, classement:  { username: string; score: number }[] | null): void;
 declare function get_user(): Promise<string | null>;
 
 async function login(event: Event): Promise<void> {
@@ -36,9 +36,9 @@ async function login(event: Event): Promise<void> {
 
         if (result.success) {
             alert(JSON.stringify(result));
-            navigateTo("");
+            navigateTo("", true, null);
         } else {
-            alert("Erreur : Wrong email or password");
+            alert(JSON.stringify(result));
         }
     } catch (error) {
         console.error("Erreur réseau :", error);
@@ -69,7 +69,7 @@ async function create_account(event: Event): Promise<void> {
 
     if (result.success) {
         alert("Compte créé!");
-        navigateTo("login");
+        navigateTo("login", true, null);
     } else {
         alert("Erreur: utilisateur existant");
     }
@@ -81,7 +81,7 @@ async function logout(print: boolean): Promise<void> {
     console.log(`print: ${print}`);
     if (print) {
         alert("Déconnexion!");
-        navigateTo("");
+        navigateTo("", true, null);
     }
 }
 
@@ -113,7 +113,7 @@ async function modify_user(event: Event): Promise<void> {
         if (result.success) {
             logout(false);
             alert("Modification effectuée!");
-            navigateTo("login");
+            navigateTo("login", true, null);
         } else {
             alert("Erreur lors de la modification.");
         }

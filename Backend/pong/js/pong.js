@@ -18,50 +18,6 @@ const ballRadius = 10;
 
 
 fastify.register(async function (fastify) {
-    // let username1 = 0;
-    // let username2 = 0;
-    // fastify.get("/ws/pong/waiting", { websocket: true }, (connection, req) => { 
-    //     clientsWaiting.add(connection);
-    //     console.log("Nouvelle connexion WebSocket sur Waiting !");
-    //     connection.socket.on("close", () => {
-    //         clientsWaiting.clear();
-    //         waitingClient = {};
-    //         i = 0;
-    //         console.log("Connexion WebSocket Waiting fermée.");
-    //     });
-    //     connection.socket.on("message", (message) => {
-    //         const data = JSON.parse(message.toString());
-    //         if (i == 0) {
-    //             waitingClient[0] = data.username;
-    //             username1 = data.username;
-    //             i++;
-    //         } else if (i == 1) {
-    //             if (data.username == username1)
-    //                 return ;
-    //             waitingClient[1] = data.username;
-    //             username2 = data.username;
-    //             i++;
-    //         }
-    //         if (i == 2) {
-    //             i = 0;
-    //             const lobbyKey = `${username1}${username2}`;
-    //             console.log("lobby: ", lobbyKey);
-    //             clientsWaiting.forEach(clientsWaiting => {
-    //                 i++;
-    //                 clientsWaiting.socket.send(JSON.stringify({ 
-    //                     success: true,
-    //                     player1: username1,
-    //                     player2: username2,
-    //                     player_id: i,
-    //                     "lobbyKey": lobbyKey
-    //                 }));
-    //             });
-    //             clientsWaiting.clear();
-    //             waitingClient = {};
-    //             i = 0;
-    //         }
-    //     });
-    // })
     fastify.get("/ws/pong", { websocket: true }, (connection, req) => {
         console.log("Nouvelle connexion WebSocket !");
         

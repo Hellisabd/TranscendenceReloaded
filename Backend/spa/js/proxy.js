@@ -16,12 +16,16 @@ fastify.register(fastifyCookie, {
 
 async function log(req, reply) {
     console.log("🔄 Redirection de /login vers users...");
-    
+    const {username} = req.body;
+    console.log(username);
     const response = await axios.post("http://users:5000/login", req.body);
     const result = await response.data;
     if (result.success) {
         console.log(response.data);
         const {token , username, domain} = response.data;
+        if (Object.values(usersession).includes(username)) {
+            return reply.send({succes: false, message: `You are already loged`});
+        }
         console.log(`domain::: ${domain}`);
         usersession[token] = username;
         return reply
@@ -36,7 +40,7 @@ async function log(req, reply) {
         })
         .send({ success: true, message: `Bienvenue ${username}`});
     } else {
-        return reply.send({success: false});
+        return reply.send(result);
     }
 }
 
