@@ -96,7 +96,7 @@ fastify.register(async function (fastify) {
                 }
                 const data = JSON.parse(message.toString());
                 let id_tournament_key_from_player = data.id_tournament_key_from_player ?? id_tournament;
-                console.log("matchmajing id_tournament a la reception du client", id_tournament_key_from_player); 
+                console.log("matchmaking id_tournament a la reception du client", id_tournament_key_from_player); 
                 let currentTournament = tournamentMap.get(id_tournament_key_from_player);
                 if (!currentTournament) {
                     console.error(`Tournoi ${id_tournament_key_from_player} introuvable`);
